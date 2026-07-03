@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YKS Özel Asistan - Kamp & Konular</title>
+    <style>
+        :root {
+            --bg-color: #0f172a; --container-bg: #1e293b; --text-color: #f8fafc;
+            --accent-color: #3b82f6; --ea-color: #f59e0b; --success-color: #10b981;
+            --border-color: #334155; --input-bg: #0f172a; --camp-red: #8B1515; --camp-green: #0fa958;
+            --alert-color: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background-color: var(--container-bg); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 550px; min-height: 650px; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+
+        .screen { display: none; padding: 40px 30px; animation: fadeIn 0.4s ease-in-out; height: 100%; overflow-y: auto; max-height: 650px; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 26px; color: var(--accent-color); margin-bottom: 10px; }
+        .header p { color: #94a3b8; font-size: 14px; }
+
+        .btn-grid { display: flex; flex-direction: column; gap: 15px; }
+        .btn { background-color: var(--input-bg); border: 2px solid var(--border-color); color: var(--text-color); padding: 20px; border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .btn:hover { border-color: var(--accent-color); background-color: rgba(59, 130, 246, 0.1); transform: scale(1.02); }
+        .btn-ea { border-color: var(--ea-color); color: var(--ea-color); }
+        .btn-ea:hover { background-color: rgba(245, 158, 11, 0.1); border-color: var(--ea-color); }
+        .btn-menu { background-color: var(--accent-color); color: white; border: none; padding: 25px; font-size: 20px; }
+        .btn-menu:hover { background-color: #2563eb; border-color: transparent; }
+
+        .btn-gradient { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); border: none; padding: 18px 25px; font-size: 20px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-gradient:hover { transform: scale(1.02); }
+
+        .back-btn { background: none; border: none; color: #94a3b8; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; gap: 5px; }
+        .back-btn:hover { color: var(--text-color); }
+
+        /* Kamp Yatay Kartları */
+        .camp-grid { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
+        .camp-card { display: flex; background-color: white; border-radius: 12px; overflow: hidden; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid white; cursor: pointer; transition: transform 0.2s; }
+        .camp-card:hover { transform: scale(1.02); }
+        .camp-header { background-color: var(--camp-red); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; font-weight: bold; font-size: 13px; min-width: 80px; text-align: center; }
+        .camp-topic-name { flex: 1; background-color: #f1f5f9; color: #334155; padding: 10px 15px; font-size: 13px; font-weight: 700; display: flex; align-items: center; border-right: 1px solid #cbd5e1; }
+        .camp-body { display: flex; align-items: center; gap: 10px; padding: 0 15px; background-color: white; }
+
+        .circle-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--camp-red); background: transparent; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-size: 16px; color: white; outline: none; }
+        .circle-btn.completed { background-color: var(--camp-green); border-color: var(--camp-green); }
+        .circle-btn.completed::after { content: "✔"; }
+
+        .global-banner { display: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: var(--camp-green); color: white; padding: 15px 30px; border-radius: 30px; font-size: 20px; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 1000; white-space: nowrap; }
+        .global-banner.active { display: flex; align-items: center; gap: 10px; animation: popUpGlobal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popUpGlobal { from { transform: translate(-50%, 60px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+        /* Konu Özetleri Kartları */
+        .subject-summary-card { background-color: var(--container-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .subject-summary-card h3 { color: var(--ea-color); font-size: 16px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .video-link { display: flex; align-items: center; justify-content: space-between; background-color: #1e293b; padding: 12px 15px; border-radius: 8px; text-decoration: none; color: white; border: 1px solid var(--border-color); transition: 0.2s; font-weight: 500; font-size: 13px; margin-bottom: 8px; }
+        .video-link:hover { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
+        .play-icon { background-color: #ef4444; color: white; padding: 5px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+
+        /* Dinamik Program Çizelgesi */
+        .schedule-item { display: flex; align-items: center; background-color: var(--input-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-bottom: 10px; gap: 10px; transition: 0.3s; }
+        .schedule-item.active-alarm { border-color: var(--alert-color); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+        .time-input { width: 100px; font-weight: bold; color: var(--ea-color); border-bottom: 1px solid var(--border-color) !important; padding: 8px; text-align: center; }
+        .time-input::placeholder { color: rgba(245, 158, 11, 0.5); font-weight: normal; }
+        .schedule-input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 15px; border-bottom: 1px solid var(--border-color); padding: 8px; }
+        .schedule-input:focus, .time-input:focus { border-bottom-color: var(--accent-color) !important; }
+        .schedule-input::placeholder { color: #64748b; }
+        .delete-btn { background-color: var(--alert-color); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .delete-btn:hover { background-color: #dc2626; transform: scale(1.05); }
+
+        .notify-btn { background-color: #8B5CF6; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; transition: 0.2s; }
+        .notify-btn:hover { background-color: #7C3AED; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--container-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="screen1" class="screen active">
+            <div class="header">
+                <h1>Hedef Belirleme</h1>
+                <p>Hangi sınava hazırlanıyorsun?</p>
+            </div>
+            <div class="btn-grid">
+                <button class="btn" onclick="goScreen('screen2')">🎓 YKS (Üniversite)</button>
+                <button class="btn" onclick="alert('LGS menüsü yapım aşamasında!')">🚀 LGS (Lise)</button>
+            </div>
+        </div>
+
+        <div id="screen2" class="screen">
+            <button class="back-btn" onclick="goScreen('screen1')">← Geri</button>
+            <div class="header">
+                <h1>YKS Alanın</h1>
+                <p>Hangi alandan tercih yapacaksın?</p>
+            </div>
+            <div class="btn-grid">
+                <button class="btn btn-ea" onclick="goScreen('screen3')">⚖️ Eşit Ağırlık (EA)</button>
+                <button class="btn" onclick="goScreen('screen3')">🧬 Sayısal (SAY)</button>
+                <button class="btn" onclick="goScreen('screen3')">📚 Sözel (SÖZ)</button>
+            </div>
+        </div>
+
+        <div id="screen3" class="screen">
+            <button class="back-btn" onclick="goScreen('screen2')">← Alan Seçimine Dön</button>
+            <div class="header">
+                <h1>Oturum Seçimi</h1>
+                <p>Hangi oturum üzerine çalışacaksın?</p>
+            </div>
+            <div class="btn-grid">
+                <button class="btn btn-menu" style="background-color: #ef4444;" onclick="setOturum('TYT')">📝 TYT (Temel Yeterlilik)</button>
+                <button class="btn btn-menu" style="background-color: #3b82f6;" onclick="setOturum('AYT')">🎯 AYT (Alan Yeterlilik)</button>
+            </div>
+        </div>
+
+        <div id="screen4" class="screen">
+            <button class="back-btn" onclick="goScreen('screen3')">← Oturum Seçimine Dön</button>
+            <div class="header">
+                <h1 id="modTitle">Çalışma Modu</h1>
+                <p>Nasıl bir çalışma yapmak istersin?</p>
+            </div>
+            <div class="btn-grid">
+                <button class="btn btn-menu" style="background-color: var(--ea-color); color: #1e293b;" onclick="kampMenusuAc()">
+                    🏖️ Yaz Kampı Görevleri
+                </button>
+                <button class="btn btn-menu" style="background-color: #10b981;" onclick="konulariYukle()">
+                    📺 Tüm Konular & Videolar
+                </button>
+            </div>
+        </div>
+
+        <div id="screenSubjects" class="screen">
+            <button class="back-btn" onclick="goScreen('screen4')">← Çalışma Moduna Dön</button>
+            <div class="header" style="margin-bottom: 20px;">
+                <h1 id="subjectsTitle" style="color: #10b981;">Tüm Konular</h1>
+                <p>Hızlı taktik ve konu anlatım videoları</p>
+            </div>
+            <div id="subjectsContainer"></div>
+        </div>
+
+        <div id="screenCampSelect" class="screen">
+            <button class="back-btn" onclick="goScreen('screen4')">← Çalışma Moduna Dön</button>
+            <div class="header" style="margin-bottom: 20px;">
+                <h1 style="color: var(--ea-color);">Yaz Kampları</h1>
+                <p>Tüm Müfredatı Bitirme Maratonu</p>
+            </div>
+            <div class="btn-grid">
+                <button class="btn-gradient" id="btnCampStart" onclick="kampBaslat()">🚀 60 Günde Kamp</button>
+            </div>
+        </div>
+
+        <div id="screenCamp" class="screen relative">
+            <button class="back-btn" onclick="goScreen('screenCampSelect')">← Kamplara Dön</button>
+            <div class="header" style="margin-bottom: 30px;">
+                <h1 id="campTitle" style="color: white;">Kamp Adı</h1>
+            </div>
+            <div class="camp-grid" id="campGrid"></div>
+            <div id="globalMilestoneBanner" class="global-banner"></div>
+        </div>
+
+        <div id="screenSchedule" class="screen">
+            <button class="back-btn" onclick="goScreen('screenCamp')">← Kampa Dön</button>
+            <div class="header" style="margin-bottom: 15px;">
+                <h1 id="scheduleTitle" style="color: var(--ea-color);">Tarih</h1>
+                <p>Ders Programı</p>
+            </div>
+            
+            <button class="notify-btn" onclick="bildirimIzinIste()" id="notifyBtn">🔔 Saat Geldiğinde Bana Haber Ver</button>
+
+            <div id="scheduleList" style="margin-bottom: 20px;"></div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="yeniDersEkle()" style="flex: 1; padding: 12px; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">+ Yeni Ders Ekle</button>
+                <button onclick="programiKaydet()" style="flex: 1; padding: 12px; background-color: var(--success-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">💾 Kaydet</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentOturum = "TYT";
+        let currentCampEndMessage = "";
+        let currentScheduleDate = "";
+
+        const konularData = {
+            TYT: {
+                "Türkçe": ["Sözcük ve Cümlede Anlam", "Paragrafta Anlam", "Ses Bilgisi ve Yazım Kuralları", "Noktalama İşaretleri", "Sözcük Türleri ve Yapısı", "Fiiller, Eylemsiler ve Çatı", "Cümlenin Ögeleri ve Türleri", "Anlatım Bozukluğu"],
+                "Matematik": ["Temel Kavramlar ve Sayılar", "Bölme, Bölünebilme, EBOB-EKOK", "Rasyonel Sayılar ve Eşitsizlik", "Mutlak Değer", "Üslü ve Köklü Sayılar", "Çarpanlara Ayırma", "Oran-Orantı ve Denklemler", "Problemler (Tüm Tipler)", "Kümeler ve Mantık", "Fonksiyonlar", "Sayma, Permütasyon, Olasılık", "Veri ve İstatistik"],
+                "Geometri": ["Doğruda ve Üçgende Açılar", "Dik, İkizkenar ve Eşkenar Üçgen", "Üçgende Alan ve Benzerlik", "Açıortay ve Kenarortay", "Çokgenler ve Dörtgenler", "Yamuk, Paralelkenar, Deltoid", "Dikdörtgen ve Kare", "Çember ve Daire", "Katı Cisimler (Prizma, Küre)", "Analitik Geometri"],
+                "Tarih": ["Tarih Bilimi ve İlk Uygarlıklar", "İlk Türk Devletleri ve İslam Tarihi", "Türk-İslam Devletleri", "Osmanlı Siyasi Tarihi", "Osmanlı Kültür ve Uygarlığı", "20. Yüzyılda Osmanlı", "Kurtuluş Savaşı ve Antlaşmalar", "Atatürk İlkeleri ve İnkılaplar"],
+                "Coğrafya": ["Doğa, İnsan ve Coğrafi Konum", "Harita Bilgisi", "İklim ve Hava Durumu", "İç ve Dış Kuvvetler", "Nüfus, Göç ve Yerleşme", "Ekonomik Faaliyetler ve Ulaşım", "Bölgeler ve Doğal Afetler"],
+                "Fen Bilimleri": ["Fizik: Madde, Hareket, Kuvvet", "Fizik: Isı, Sıcaklık, Elektrik, Optik", "Kimya: Atom, Periyodik Sistem", "Kimya: Karışımlar, Asit-Baz", "Biyoloji: Hücre ve Canlıların Dünyası", "Biyoloji: Kalıtım ve Ekosistem"]
+            },
+            AYT: {
+                "Edebiyat": ["Şiir Bilgisi ve Söz Sanatları", "İslamiyet Öncesi ve Geçiş Dönemi", "Halk Edebiyatı", "Divan Edebiyatı", "Tanzimat Dönemi", "Servet-i Fünun ve Fecr-i Ati", "Milli Edebiyat", "Cumhuriyet Dönemi Şiir ve Roman", "Edebi Akımlar"],
+                "Tarih-1": ["İlk Çağ Uygarlıkları ve Türkler", "İslam Tarihi ve Türk-İslam", "Osmanlı Devleti (Kuruluştan Yıkılışa)", "Kurtuluş Savaşı Dönemi", "İki Savaş Arası Dönem ve Küreselleşme"],
+                "Coğrafya-1": ["Biyoçeşitlilik ve Ekosistem", "Şehirlerin Fonksiyonları", "Türkiye'de Tarım, Hayvancılık, Maden", "Türkiye'de Sanayi ve Turizm", "Küresel ve Bölgesel Örgütler", "Çevre Sorunları"],
+                "Matematik-Geometri": ["İkinci Dereceden Denklemler ve Karmaşık Sayılar", "Parabol ve Polinomlar", "Trigonometri", "Logaritma", "Diziler", "Limit ve Süreklilik", "Türev", "İntegral", "Çemberin Analitik İncelenmesi"]
+            }
+        };
+
+        function goScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById('globalMilestoneBanner').classList.remove('active');
+        }
+
+        function setOturum(oturum) {
+            currentOturum = oturum;
+            goScreen('screen4');
+        }
+
+        function kampMenusuAc() {
+            goScreen('screenCampSelect');
+        }
+
+        function konulariYukle() {
+            const container = document.getElementById('subjectsContainer');
+            container.innerHTML = '';
+            const data = konularData[currentOturum];
+            for (let ders in data) {
+                let konularHTML = data[ders].map(konu => `
+                    <div class="video-link">
+                        <span style="flex:1;">• ${konu}</span>
+                        <a href="https://www.youtube.com/results?search_query=${currentOturum}+${ders}+${konu}" target="_blank" class="play-icon" style="text-decoration:none;">▶ İzle</a>
+                    </div>
+                `).join('');
+                container.innerHTML += `<div class="subject-summary-card"><h3>${ders}</h3>${konularHTML}</div>`;
+            }
+            document.getElementById('subjectsTitle').innerText = `${currentOturum} Tüm Konular`;
+            goScreen('screenSubjects');
+        }
+
+        function toggleCircle(btnElement, event) {
+            event.stopPropagation();
+            btnElement.classList.toggle('completed');
+            const grid = document.getElementById('campGrid');
+            const totalCircles = grid.querySelectorAll('.circle-btn').length;
+            const completedCircles = grid.querySelectorAll('.circle-btn.completed').length;
+            const banner = document.getElementById('globalMilestoneBanner');
+            if (totalCircles > 0 && totalCircles === completedCircles) {
+                banner.innerText = `🎉 ${currentCampEndMessage} 🚀`;
+                banner.classList.add('active');
+            } else {
+                banner.classList.remove('active');
+            }
+        }
+
+        function programAc(tarihStr) {
+            currentScheduleDate = tarihStr;
+            document.getElementById('scheduleTitle').innerText = tarihStr;
+            const scheduleList = document.getElementById('scheduleList');
+            scheduleList.innerHTML = '';
+            
+            const savedData = localStorage.getItem('yks_program_' + currentOturum + '_' + currentScheduleDate);
+            if (savedData) {
+                const dersler = JSON.parse(savedData);
+                dersler.forEach(ders => dersEkleHTML(ders.saat, ders.konu));
+            } else {
+                for(let i = 0; i < 5; i++) {
+                    dersEkleHTML("", "");
+                }
+            }
+            goScreen('screenSchedule');
+        }
+
+        function dersEkleHTML(saatVal, konuVal) {
+            const scheduleList = document.getElementById('scheduleList');
+            const div = document.createElement('div');
+            div.className = 'schedule-item';
+            div.innerHTML = `
+                <input type="text" class="schedule-input time-input" placeholder="08.00-08.40" value="${saatVal}">
+                <input type="text" class="schedule-input" placeholder="Çalışılacak ders/konu girin..." value="${konuVal}">
+                <button class="delete-btn" onclick="this.parentElement.remove()" title="Bu dersi sil">X</button>
+            `;
+            scheduleList.appendChild(div);
+        }
+
+        function yeniDersEkle() { dersEkleHTML("", ""); }
+
+        function programiKaydet() {
+            const items = document.querySelectorAll('#scheduleList .schedule-item');
+            const programData = [];
+            items.forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                const saat = inputs[0].value.trim();
+                const konu = inputs[1].value.trim();
+                if(saat || konu) { programData.push({ saat, konu }); }
+            });
+            localStorage.setItem('yks_program_' + currentOturum + '_' + currentScheduleDate, JSON.stringify(programData));
+            alert(currentScheduleDate + " için ders programı başarıyla kaydedildi! 💾");
+        }
+
+        function kampBaslat() {
+            document.getElementById('campTitle').innerText = `60 Günde ${currentOturum} Kampı`;
+            currentCampEndMessage = `TÜM ${currentOturum} BİTTİ!`;
+            const grid = document.getElementById('campGrid');
+            grid.innerHTML = ''; 
+            document.getElementById('globalMilestoneBanner').classList.remove('active');
+
+            let baslangicTarihi = new Date(2026, 6, 3); 
+            const aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            const allTopics = [];
+            const data = konularData[currentOturum];
+            for (let ders in data) { data[ders].forEach(konu => allTopics.push(`${ders} - ${konu}`)); }
+
+            for (let i = 0; i < 60; i++) {
+                let currentDay = new Date(baslangicTarihi);
+                currentDay.setDate(currentDay.getDate() + i);
+                let gunStr = currentDay.getDate();
+                let ayStr = aylar[currentDay.getMonth()];
+                let konuIsmi = allTopics[i % allTopics.length];
+
+                const cardHTML = `
+                    <div class="camp-card" onclick="programAc('${gunStr} ${ayStr}')">
+                        <div class="camp-header"><span>${gunStr}</span><span>${ayStr}</span></div>
+                        <div class="camp-topic-name">${konuIsmi}</div>
+                        <div class="camp-body">
+                            <button class="circle-btn" onclick="toggleCircle(this, event)"></button>
+                            <button class="circle-btn" onclick="toggleCircle(this, event)"></button>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
+            }
+            goScreen('screenCamp');
+        }
+
+        // ================= ALARM VE BİLDİRİM SİSTEMİ =================
+        let isNotificationGranted = false;
+
+        function bildirimIzinIste() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        isNotificationGranted = true;
+                        document.getElementById("notifyBtn").innerText = "✅ Bildirimler Aktif! Sekmeyi kapatma.";
+                        document.getElementById("notifyBtn").style.backgroundColor = "#10b981";
+                        // Ses motorunu test için hafifçe dürtüyoruz (Browser engellemesin diye)
+                        playAlarm(true);
+                    } else {
+                        alert("Bildirimlere izin vermedin. Sadece site içindeyken alarm çalacak.");
+                    }
+                });
+            } else {
+                alert("Tarayıcın bildirimleri desteklemiyor.");
+            }
+        }
+
+        function playAlarm(isSilentTest = false) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            if(isSilentTest) {
+                gainNode.gain.setValueAtTime(0, ctx.currentTime); // Test için sessiz
+            } else {
+                // Klasik "dıt-dıt-dıt" dijital saat alarm sesi tasarımı
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                osc.frequency.setValueAtTime(0, ctx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(800, ctx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(0, ctx.currentTime + 0.3);
+                osc.frequency.setValueAtTime(800, ctx.currentTime + 0.4);
+                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+            }
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.6);
+        }
+
+        // Her 30 saniyede bir saati kontrol eden döngü
+        setInterval(() => {
+            if(document.getElementById('screenSchedule').classList.contains('active')) {
+                const now = new Date();
+                let h = now.getHours().toString().padStart(2, '0');
+                let m = now.getMinutes().toString().padStart(2, '0');
+                let curTimeDot = `${h}.${m}`; // Örn: 08.00
+                let curTimeCol = `${h}:${m}`; // Örn: 08:00
+                
+                const items = document.querySelectorAll('#scheduleList .schedule-item');
+                
+                items.forEach(item => {
+                    const inputs = item.querySelectorAll('input');
+                    const timeInput = inputs[0].value.trim(); // "08.00-08.40"
+                    const subjectInput = inputs[1].value.trim();
+                    
+                    if(timeInput && subjectInput && !item.dataset.notified) {
+                        const startTime = timeInput.split('-')[0].trim(); // Sadece ilk saati al
+                        
+                        if(startTime === curTimeDot || startTime === curTimeCol) {
+                            playAlarm();
+                            item.classList.add("active-alarm"); // Kutuyu kırmızı yak
+                            
+                            if (isNotificationGranted) {
+                                new Notification("⏰ Ders Vakti: " + subjectInput, {
+                                    body: "Haydi Arda! " + subjectInput + " çalışma zamanı geldi.",
+                                });
+                            } else {
+                                alert("⏰ Ders Vakti Geldi!\nKonu: " + subjectInput);
+                            }
+                            
+                            item.dataset.notified = "true"; // Aynı dakikada 2 kez çalmasın
+                        }
+                    }
+                });
+            }
+        }, 30000); 
+    </script>
+</body>
+</html>
